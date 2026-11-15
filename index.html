@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101015">
+  <title>DKK EMILX</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="logo-dkk-emilx.png" alt="Logo DKK EMILX" onerror="this.style.display='none'">
+      <div><strong>DKK EMILX</strong><small>😈☠️ • Official Website</small></div>
+    </div>
+    <button id="logoutBtn" class="ghost hidden">Keluar</button>
+  </header>
+
+  <main>
+    <section id="loginView" class="login-wrap">
+      <div class="panel login-panel">
+        <p class="eyebrow">SELAMAT DATANG</p>
+        <h1>Masuk ke portal</h1>
+        <p class="muted">Masuk sebagai User atau Developer untuk melihat prototipe.</p>
+        <label>Mode akun</label>
+        <select id="roleSelect"><option value="user">User</option><option value="developer">Developer (pratinjau)</option></select>
+        <label>Username</label>
+        <input id="username" autocomplete="username" placeholder="Masukkan username">
+        <label>Password</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="Masukkan password">
+        <button id="loginBtn" class="primary">Masuk</button>
+        <p id="loginMessage" class="message"></p>
+        <p class="tiny">Pratinjau tampilan saja. Login aman belum aktif; jangan gunakan password asli di prototipe ini.</p>
+      </div>
+    </section>
+
+    <section id="appView" class="hidden">
+      <div class="welcome">
+        <div><p class="eyebrow">PORTAL DKK</p><h1 id="pageTitle">Dashboard User</h1><p class="muted" id="pageSubtitle">Prediksi yang dipublikasikan oleh Admin.</p></div>
+        <span id="rolePill" class="pill">USER</span>
+      </div>
+
+      <section id="userPanel" class="panel">
+        <div class="section-head"><div><h2>Prediksi terbaru</h2><p class="muted">User hanya dapat melihat. Tidak tersedia tombol tambah, edit, atau hapus.</p></div></div>
+        <div id="predictionList" class="cards"></div>
+      </section>
+
+      <section id="devPanel" class="panel hidden">
+        <div class="section-head"><div><h2>Developer preview</h2><p class="muted">Panel ini hanya contoh antarmuka. Hubungkan autentikasi backend sebelum dipakai sungguhan.</p></div></div>
+        <div class="notice">Akun Developer belum dikonfigurasi. Username dan password harus diverifikasi di server, bukan disimpan di HTML atau JavaScript.</div>
+        <form id="predictionForm" class="form-grid">
+          <div><label>Tim 1</label><input id="teamA" required placeholder="Contoh: Tim A"></div>
+          <div><label>Tim 2 (lawan)</label><input id="teamB" required placeholder="Contoh: Tim B"></div>
+          <div><label>Pilihan simulasi</label><select id="pick"><option value="A">Tim 1</option><option value="B">Tim 2</option></select></div>
+          <div><label>Status</label><select id="status"><option>Menunggu</option><option>Selesai</option></select></div>
+          <div class="full"><label>Catatan (opsional)</label><input id="notes" placeholder="Catatan pertandingan"></div>
+          <div class="full"><button class="primary" type="submit">Publikasikan simulasi</button></div>
+        </form>
+        <p class="tiny">Data pada pratinjau tersimpan di browser ini saja dan dapat hilang jika data browser dibersihkan.</p>
+      </section>
+      <footer>DKK EMILX 😈☠️ <span>Simulasi statistik Free Fire • Bukan taruhan uang</span></footer>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
