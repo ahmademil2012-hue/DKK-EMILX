@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DKK EMILX — Prediksi Free Fire</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#04060d">
+<!-- LIBRARY SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ============ CSS DASAR & TEMA ============ */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+:root {
+  --bg: #04060d; --surface: rgba(255,255,255,0.04); --border: rgba(80,140,255,0.15);
+  --neon: #00d4ff; --purple: #8b5cf6; --gold: #fbbf24; --text: #e8ecf8; --muted: #7c8aab;
+  --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+}
+body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle at 10% 0%, rgba(0,110,255,0.15), transparent 40%),
+              radial-gradient(circle at 90% 10%, rgba(139,92,246,0.1), transparent 40%);
+}
+button { cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea { font-family: inherit; font-size: 14px; outline: none; }
+
+/* ============ AUTH ============ */
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.auth-card { width: 100%; max-width: 400px; background: linear-gradient(160deg, #0c1424, #070c18); border: 1px solid var(--border); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px -20px rgba(0,100,255,0.4); }
+.auth-logo-mark { width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 20px; border: 1px solid var(--neon); overflow: hidden; box-shadow: 0 0 20px rgba(0,212,255,0.4); }
+.auth-logo-mark img { width: 100%; height: 100%; object-fit: cover; }
+.auth-logo h1 { text-align: center; font-size: 24px; background: linear-gradient(90deg, #fff, var(--neon)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+.auth-tabs { display: flex; background: var(--surface); border-radius: 12px; padding: 4px; margin: 20px 0; }
+.auth-tabs button { flex: 1; padding: 10px; border-radius: 8px; font-weight: 700; color: var(--muted); }
+.auth-tabs button.active { background: linear-gradient(90deg, var(--neon), var(--purple)); color: #000; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; font-weight: 700; letter-spacing: 1px; }
+.form-group input, .form-group select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 10px; color: #fff; }
+.form-group input:focus { border-color: var(--neon); }
+.btn-primary { width: 100%; padding: 12px; border-radius: 10px; font-weight: 800; background: linear-gradient(90deg, var(--neon), var(--purple)); color: #000; transition: 0.2s; text-align: center; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -10px var(--neon); }
+
+/* ============ APP SHELL ============ */
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: 250px; background: #070b16; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 15px; position: fixed; top: 0; bottom: 0; left: 0; z-index: 50; transition: 0.3s; }
+.brand { display: flex; align-items: center; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 15px; }
+.brand-logo { width: 40px; height: 40px; border-radius: 10px; overflow: hidden; border: 1px solid var(--neon); }
+.brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+.brand-name { font-size: 16px; font-weight: 800; color: var(--neon); }
+.nav { flex: 1; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; color: var(--muted); font-weight: 600; font-size: 13px; text-align: left; width: 100%; transition: 0.2s; text-decoration: none; }
+.nav-item:hover, .nav-item.active { background: rgba(0,212,255,0.1); color: var(--neon); }
+.main { flex: 1; margin-left: 250px; display: flex; flex-direction: column; min-width: 0; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(4,6,13,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+.content { padding: 20px; }
+
+/* ============ KOMPONEN UI ============ */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 12px; transition: 0.3s; }
+.stat-card:hover { transform: translateY(-2px); border-color: rgba(0,212,255,0.3); }
+.stat-card .label { font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+.stat-card .value { font-size: 24px; font-weight: 800; color: var(--neon); }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+.panel-title { font-size: 14px; font-weight: 800; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+.pred-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+
+/* KARTU PREDIKSI BARU */
+.pred-card { background: #0a1020; border: 1px solid var(--border); border-radius: 12px; padding: 15px; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.pred-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 8px; }
+.pred-admin { font-size: 11px; color: var(--muted); font-weight: 600; }
+.pred-admin b { color: var(--neon); text-transform: uppercase; }
+.pred-matchup { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 15px; text-align: center; margin: 5px 0; }
+.pred-matchup .team { flex: 1; }
+.pred-matchup .vs { font-size: 10px; color: var(--muted); padding: 0 10px; }
+.pred-picked { color: var(--danger); text-shadow: 0 0 8px rgba(239,68,68,0.4); }
+.pred-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+.pred-pick-text { font-size: 11px; color: var(--muted); }
+
+/* Badge Status Warna */
+.badge { font-size: 10px; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge.active { background: rgba(16,185,129,0.2); color: var(--success); }
+.badge.blocked { background: rgba(239,68,68,0.2); color: var(--danger); }
+.badge.coming-soon { background: rgba(0,212,255,0.15); color: var(--neon); border: 1px solid rgba(0,212,255,0.3); }
+.badge.live { background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); animation: pulse 1.5s infinite; }
+.badge.done { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+.badge.reff-all { background: rgba(245,158,11,0.2); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+.badge.lose { background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+/* ============ MAINTENANCE SCREEN ============ */
+.maint-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+.maint-img { width: 100%; max-width: 320px; border-radius: 20px; border: 2px solid var(--danger); box-shadow: 0 0 30px rgba(239,68,68,0.3); margin-bottom: 25px; object-fit: cover; }
+.maint-title { font-size: 28px; font-weight: 800; color: var(--danger); letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 0 15px rgba(239,68,68,0.5); }
+.maint-text { font-size: 14px; color: var(--muted); margin-bottom: 30px; max-width: 300px; line-height: 1.5; }
+
+/* ============ TOGGLE SWITCH ============ */
+.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; border: 1px solid var(--border); }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--danger); border-color: var(--danger); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* ============ PROFIL CARD ============ */
+.profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.profile-img { width: 70px; height: 70px; border-radius: 15px; border: 2px solid var(--neon); overflow: hidden; box-shadow: 0 0 15px rgba(0,212,255,0.3); }
+.profile-img img { width: 100%; height: 100%; object-fit: cover; }
+.ref-box { display: flex; gap: 10px; margin-top: 10px; }
+.ref-box input { flex: 1; text-align: center; font-weight: 800; letter-spacing: 2px; color: var(--gold); font-size: 16px; }
+
+/* ============ NOTIFIKASI ============ */
+.notif-btn { position: relative; font-size: 20px; padding: 5px; }
+.notif-dot { position: absolute; top: 0; right: 0; background: var(--danger); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 10px; }
+.notif-panel { position: absolute; top: 60px; right: 20px; width: 300px; background: #0c1424; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100; max-height: 400px; overflow-y: auto; display: none; }
+.notif-panel.show { display: block; }
+.notif-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.notif-item.unread { background: rgba(0,212,255,0.05); }
+.notif-item h4 { font-size: 12px; margin-bottom: 4px; color: var(--neon); }
+.notif-item p { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+/* ============ MODAL & TOAST ============ */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+.modal-box { background: #0c1424; border: 1px solid var(--neon); border-radius: 15px; padding: 20px; width: 100%; max-width: 400px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+.modal-actions button { flex: 1; padding: 10px; border-radius: 8px; font-weight: 700; }
+.btn-cancel { background: var(--surface); color: #fff; }
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0c1424; border: 1px solid var(--neon); padding: 10px 20px; border-radius: 10px; z-index: 300; display: none; font-size: 13px; font-weight: 700; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+/* RESPONSIVE */
+.menu-btn { display: none; font-size: 24px; }
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .menu-btn { display: block; }
+}
+</style>
+</head>
+<body>
+<div id="root"><div style="height:100vh; display:flex; align-items:center; justify-content:center; color:var(--neon); font-weight:bold; font-size:20px;">Menghubungkan ke Server...</div></div>
+<div id="toast"></div>
+
+<script>
+/* =============================================================
+   KONFIGURASI SUPABASE (PUBLIC KEY SUDAH DIPASANG)
+   ============================================================= */
+const SUPABASE_URL = 'https://biatwptrmhwjtcquhnii.supabase.co'; 
+const SUPABASE_KEY = 'sb_publishable_1k5xRTzP-xvaXGPFKsAc_g_FN89DKF5';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* =============================================================
+   1. LOGIKA UTILITAS
+   ============================================================= */
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function sha256(txt) {
+  const buf = new TextEncoder().encode(txt);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+let DB = null;
+let view = 'dashboard';
+let authTab = 'login';
+
+// FUNGSI SIMPAN KE SUPABASE
+async function saveDB() {
+  try {
+    await supabase.from('app_state').upsert({ id: 'dkk_main', data: DB });
+  } catch (e) {
+    console.error('Gagal simpan ke server:', e);
+    showToast('Gagal sinkronisasi data ke server!');
+  }
+}
+
+async function initDB() {
+  const { data, error } = await supabase.from('app_state').select('data').eq('id', 'dkk_main').single();
+  
+  if (error && error.code !== 'PGRST116') {
+    console.error(error);
+    alert('Gagal konek ke database. Cek URL/Key Supabase.');
+    return;
+  }
+
+  if (data && data.data) {
+    DB = data.data;
+  } else {
+    // INIT DATA PERTAMA KALI
+    DB = { users: [], preds: [], notifs: [], withdrawals: [], session: null, maintenance: false };
+    DB.users.push({ id: uid(), username: 'DKK_EMILX', name: 'Owner', role: 'dev', pass: await sha256('DKK_EMILX@2024'), status: 'active', saldo: 0, referralCode: 'DKK-DEV' });
+    DB.users.push({ id: uid(), username: 'admin', name: 'Admin', role: 'admin', pass: await sha256('admin123'), status: 'active', saldo: 0, referralCode: 'DKK-ADM' });
+    DB.notifs.push({ id: uid(), userId: 'all', title: 'Selamat Datang!', msg: 'Web DKK EMILX sudah rilis dan terhubung ke server pusat!', read: false, time: Date.now() });
+    await supabase.from('app_state').insert([{ id: 'dkk_main', data: DB }]);
+  }
+  
+  setupRealtime();
+  render();
+}
+
+// FUNGSI REALTIME (Otomatis update HP lain)
+function setupRealtime() {
+  supabase.channel('custom-all-channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, payload => {
+      if (payload.new && payload.new.data) {
+        // Cek apakah ada perubahan dari device lain
+        if (JSON.stringify(DB) !== JSON.stringify(payload.new.data)) {
+          DB = payload.new.data;
+          render();
+          console.log('Data terupdate dari server!');
+        }
+      }
+    })
+    .subscribe();
+}
+
+function showToast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function getBadgeClass(status) {
+  const s = status.toUpperCase();
+  if (s === 'LIVE') return 'live';
+  if (s === 'DONE') return 'done';
+  if (s === 'LOSE') return 'lose';
+  if (s === 'REFF ALL') return 'reff-all';
+  return 'coming-soon';
+}
+
+/* =============================================================
+   2. NOTIFIKASI & IZIN HP
+   ============================================================= */
+const VAPID_PUBLIC_KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEldsdpeRsrSBJynghuCmxGXt2ed9m3EfvFcPhVtNqO7goOv0k59QIALvrP8XC78OevSQGg_Ahb9H_p46iClAcgg';
+
+function mintaIzinNotifAwal() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') aktifkanNotifHP(true); 
+    });
+  } else if (Notification.permission === 'granted') {
+    aktifkanNotifHP(true);
+  }
+}
+
+function pushNotif(userId, title, msg) {
+  if(!DB) return;
+  DB.notifs.unshift({ id: uid(), userId, title, msg, read: false, time: Date.now() });
+  saveDB();
+  if (DB.session === userId) render();
+}
+
+async function aktifkanNotifHP(silent = false) {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
+    await fetch('/api/push?action=subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub) });
+    if(!silent) showToast('Notif HP berhasil diaktifkan!');
+  } catch (e) { 
+    if(!silent) showToast('Gagal aktifkan notif: ' + e.message); 
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW fail', e));
+
+/* =============================================================
+   3. RENDER AUTH & MAINTENANCE
+   ============================================================= */
+function render() {
+  if (!DB) return;
+  const user = DB.session ? DB.users.find(u => u.id === DB.session) : null;
+  
+  if (!user) { renderAuth(); return; }
+  if (DB.maintenance && user.role === 'user') { renderMaintenance(user); return; }
+  renderApp(user);
+}
+
+function renderMaintenance(user) {
+  const imgUrl = 'https://i.ibb.co.com/rBnQqzW/maintenance.jpg'; 
+  $('#root').innerHTML = `
+    <div class="maint-wrap">
+      <img src="${imgUrl}" class="maint-img" onerror="this.src='https://via.placeholder.com/300x200/04060d/ef4444?text=FOTO+MAINTENANCE'">
+      <div class="maint-title">SEDANG MAINTENANCE</div>
+      <div class="maint-text">
+        Mohon maaf, website DKK EMILX sedang dalam perbaikan sistem.<br><br>Silakan kembali lagi nanti.
+      </div>
+      <button class="btn-primary" style="max-width: 300px; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px;" onclick="mintaIzinNotifAwal()">
+        🔔 Nyalakan Notif
+      </button>
+      <button class="btn-cancel" style="width: 100%; max-width: 300px; padding: 12px; border-radius: 10px; border: 1px solid var(--border);" onclick="DB.session=null;saveDB();render()">
+        Logout
+      </button>
+    </div>
+  `;
+}
+
+function renderAuth() {
+  $('#root').innerHTML = `
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-logo-mark"><img src="https://i.ibb.co.com/NnjZvt0M/logo.jpg"></div>
+        <div class="auth-logo"><h1>DKK EMILX</h1></div>
+        <div class="auth-tabs">
+          <button class="${authTab==='login'?'active':''}" onclick="authTab='login';renderAuth()">Login</button>
+          <button class="${authTab==='register'?'active':''}" onclick="authTab='register';renderAuth()">Daftar</button>
+        </div>
+
+        ${authTab === 'login' ? `
+          <div class="form-group"><label>Gmail / Username</label><input id="l-user" type="text" placeholder="contoh@gmail.com"></div>
+          <div class="form-group"><label>Password</label><input id="l-pass" type="password" placeholder="Masukkan password"></div>
+          <button class="btn-primary" onclick="doLogin()">Masuk</button>
+        ` : `
+          <div class="form-group"><label>Gmail</label><input id="r-user" type="email" placeholder="contoh@gmail.com"></div>
+          <div class="form-group"><label>Nama Anda</label><input id="r-name" type="text" placeholder="Nama Panggilan"></div>
+          <div class="form-group"><label>Password</label><input id="r-pass" type="password" placeholder="Minimal 6 karakter"></div>
+          <div class="form-group"><label>Kode Referral (Opsional)</label><input id="r-ref" type="text" placeholder="Contoh: DKK-AB12"></div>
+          <button class="btn-primary" onclick="doRegister()">Daftar Sekarang</button>
+        `}
+      </div>
+    </div>`;
+}
+
+async function doLogin() {
+  const u = $('#l-user').value.trim(), p = $('#l-pass').value;
+  if (!u || !p) return showToast('Isi Gmail/Username dan password!');
+  const hash = await sha256(p);
+  const user = DB.users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.pass === hash);
+  if (!user) return showToast('Akun / Password salah!');
+  if (user.status === 'blocked') return showToast('Akun diblokir!');
+  
+  DB.session = user.id; saveDB(); render();
+  setTimeout(() => { mintaIzinNotifAwal(); }, 1500);
+}
+
+async function doRegister() {
+  const email = $('#r-user').value.trim();
+  const name = $('#r-name').value.trim();
+  const p = $('#r-pass').value;
+  const refCode = $('#r-ref').value.trim().toUpperCase();
+  
+  if (!email || !email.includes('@')) return showToast('Format Gmail tidak valid!');
+  if (!name) return showToast('Nama tidak boleh kosong!');
+  if (p.length < 6) return showToast('Password minimal 6 karakter!');
+  if (DB.users.find(x => x.username.toLowerCase() === email.toLowerCase())) return showToast('Gmail sudah terdaftar!');
+  
+  let referredById = null;
+  if (refCode) {
+    const referrer = DB.users.find(u => u.referralCode === refCode);
+    if (!referrer) return showToast('Kode Referral tidak valid!');
+    referrer.saldo = (referrer.saldo || 0) + 100;
+    referredById = referrer.id;
+    pushNotif(referrer.id, '💰 Bonus Referral!', `Selamat, kamu mendapat Rp 100 karena kode referralmu dipakai.`);
+  }
+
+  const myRefCode = 'DKK-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  const newUser = { 
+    id: uid(), username: email, name: name, role: 'user', 
+    pass: await sha256(p), status: 'active', saldo: 100, 
+    referralCode: myRefCode, referredBy: referredById 
+  };
+  
+  DB.users.push(newUser);
+  pushNotif(newUser.id, 'Selamat Datang!', `Halo ${name}, akun berhasil dibuat. Kamu dapat saldo awal Rp 100.`);
+  DB.session = newUser.id; saveDB(); render();
+  setTimeout(() => { mintaIzinNotifAwal(); }, 1500);
+}
+
+/* =============================================================
+   4. RENDER DASHBOARD & MENU
+   ============================================================= */
+function renderApp(user) {
+  const unread = DB.notifs.filter(n => (n.userId === user.id || n.userId === 'all') && !n.read).length;
+  
+  const waLinks = `
+    <div style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 10px; color: var(--muted); margin-bottom: 2px; padding-left: 5px; letter-spacing: 1px; font-weight: 700;">OFFICIAL CHANNELS</div>
+      <a href="https://whatsapp.com/channel/0029VbDVnXKLY6d896sSVt22" target="_blank" class="nav-item" style="color: var(--neon); border: 1px solid rgba(0,212,255,0.3); background: rgba(0,212,255,0.05);">🔗 DKK EMILX</a>
+      <a href="https://whatsapp.com/channel/0029Vb8mBEQLdQeaaeiihF1b" target="_blank" class="nav-item" style="color: var(--success); border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);">⚡ LINK PARLAY MIELZ X JALZ</a>
+      <a href="https://whatsapp.com/channel/0029VbDnzho6mYPDlRKRGS2J" target="_blank" class="nav-item" style="color: #f97316; border: 1px solid rgba(249,115,22,0.3); background: rgba(249,115,22,0.05);">💸 LINK RWTF EMILX💸💸</a>
+    </div>
+  `;
+  
+  let menu = '';
+  if (user.role === 'user') {
+    menu = `
+      <button class="nav-item ${view==='dashboard'?'active':''}" onclick="nav('dashboard')">📊 Dashboard</button>
+      <button class="nav-item ${view==='preds'?'active':''}" onclick="nav('preds')">🎯 Hasil Prediksi</button>
+      <button class="nav-item ${view==='saldo'?'active':''}" onclick="nav('saldo')">💰 Paling Banyak Saldo</button>
+      <button class="nav-item ${view==='tarik'?'active':''}" onclick="nav('tarik')">💸 Tarik Tunai</button>
+      <button class="nav-item ${view==='profil'?'active':''}" onclick="nav('profil')">👤 Profil & Referral</button>
+      ${waLinks}
+    `;
+  } else if (user.role === 'admin' || user.role === 'dev') {
+    menu = `
+      <button class="nav-item ${view==='dashboard'?'active':''}" onclick="nav('dashboard')">📊 Dashboard</button>
+      <button class="nav-item ${view==='preds'?'active':''}" onclick="nav('preds')">🎯 Kelola Prediksi</button>
+      <button class="nav-item ${view==='saldo'?'active':''}" onclick="nav('saldo')">💰 Paling Banyak Saldo</button>
+      <button class="nav-item ${view==='tarik'?'active':''}" onclick="nav('tarik')">💸 Tarik Tunai</button>
+      <button class="nav-item ${view==='penarikan'?'active':''}" onclick="nav('penarikan')">💳 Kelola Penarikan</button>
+      <button class="nav-item ${view==='users'?'active':''}" onclick="nav('users')">👥 Semua User</button>
+      <button class="nav-item ${view==='profil'?'active':''}" onclick="nav('profil')">👤 Profil & Referral</button>
+      ${user.role === 'dev' ? `<button class="nav-item ${view==='system'?'active':''}" onclick="nav('system')" style="color:var(--danger); font-weight:800;">⚙️ Sistem (Dev)</button>` : ''}
+      ${waLinks}
+    `;
+  }
+
+  $('#root').innerHTML = `
+    <div class="app">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-logo"><img src="https://i.ibb.co.com/NnjZvt0M/logo.jpg"></div>
+          <div class="brand-name">DKK EMILX</div>
+        </div>
+        <nav class="nav">${menu}</nav>
+        <button class="btn-cancel" style="margin-top:10px;padding:10px;" onclick="DB.session=null;saveDB();render()">Logout</button>
+      </aside>
+      
+      <main class="main">
+        <header class="topbar">
+          <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+          <div style="font-weight:800;font-size:16px">${view.toUpperCase()}</div>
+          <div style="position:relative">
+            <button class="notif-btn" onclick="document.querySelector('.notif-panel').classList.toggle('show')">
+              🔔 ${unread > 0 ? `<span class="notif-dot">${unread}</span>` : ''}
+            </button>
+            <div class="notif-panel">
+              <div style="padding:12px;font-weight:800;border-bottom:1px solid var(--border)">Notifikasi</div>
+              ${DB.notifs.filter(n => n.userId === user.id || n.userId === 'all').slice(0, 10).map(n => `
+                <div class="notif-item ${n.read?'':'unread'}" onclick="readNotif('${n.id}')">
+                  <h4>${esc(n.title)}</h4><p>${esc(n.msg)}</p>
+                </div>
+              `).join('') || '<div style="padding:20px;text-align:center;font-size:12px;color:gray">Belum ada notif</div>'}
+            </div>
+          </div>
+        </header>
+        <div class="content">
+          ${renderContent(user)}
+        </div>
+      </main>
+    </div>`;
+}
+
+function nav(v) { view = v; document.getElementById('sidebar').classList.remove('open'); render(); }
+function readNotif(id) { const n = DB.notifs.find(x => x.id === id); if(n){ n.read = true; saveDB(); render(); } }
+
+function renderPredCard(p, isAdminView) {
+  let contentHtml = '';
+  if (p.text) {
+    contentHtml = `<div style="margin: 10px 0; font-size: 15px; font-weight: 800; color: #fff; line-height: 1.4;">${esc(p.text)}</div>`;
+  } else {
+    const isPickT1 = p.pick === 'team1';
+    const t1Class = isPickT1 ? 'pred-picked' : '';
+    const t2Class = !isPickT1 ? 'pred-picked' : '';
+    contentHtml = `
+      <div class="pred-matchup">
+        <div class="team ${t1Class}">${esc(p.t1)}</div>
+        <div class="vs">VS</div>
+        <div class="team ${t2Class}">${esc(p.t2)}</div>
+      </div>
+      <div class="pred-footer" style="margin-top: 10px;">
+        <div class="pred-pick-text">Pilihan: <b style="color:var(--danger)">${isPickT1 ? p.t1 : p.t2}</b></div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="pred-card" style="border-left: 3px solid ${p.status === 'DONE' ? 'var(--success)' : p.status === 'LOSE' ? 'var(--danger)' : p.status === 'REFF ALL' ? 'var(--warning)' : 'var(--neon)'};">
+      <div class="pred-header">
+        <div class="pred-admin">Pred Admin: <b>${esc(p.admin)}</b></div>
+        <span class="badge ${getBadgeClass(p.status)}">${p.status}</span>
+      </div>
+      ${contentHtml}
+      ${isAdminView ? `
+        <div style="display:flex; gap:5px; margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+          <button onclick="openPredModal('${p.id}')" style="flex:1; color:var(--neon);font-size:11px;border:1px solid var(--neon);padding:4px;border-radius:5px">Edit</button>
+          <button onclick="delPred('${p.id}')" style="flex:1; color:red;font-size:11px;border:1px solid red;padding:4px;border-radius:5px">Hapus</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderContent(user) {
+  const isAdmin = user.role === 'admin' || user.role === 'dev';
+
+  if (view === 'system' && user.role === 'dev') {
+    return `
+      <div class="panel" style="max-width: 500px; margin: 0 auto;">
+        <div class="panel-title" style="font-size: 16px; color: var(--danger);">⚙️ PENGATURAN DEVELOPER</div>
+        <div class="row" style="padding: 20px;">
+          <div class="row-main">
+            <div class="row-name" style="font-size: 15px;">Mode Maintenance</div>
+            <div class="row-sub" style="margin-top: 5px;">Jika ON, User biasa tidak bisa masuk. Hanya Admin & Dev.</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" ${DB.maintenance ? 'checked' : ''} onchange="toggleMaintenance()">
+            <span class="slider"></span>
+          </label>
+        </div>
+        ${DB.maintenance ? '<div style="text-align:center; padding: 15px; color:var(--danger); font-weight:800; border: 1px dashed var(--danger); border-radius:10px; background:rgba(239,68,68,0.05);">⚠️ SAAT INI MAINTENANCE AKTIF!</div>' : ''}
+      </div>
+    `;
+  }
+
+  if (view === 'dashboard') {
+    const recentResults = DB.preds.slice(0, 10);
+    return `
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">Total Prediksi</div><div class="value">${DB.preds.length}</div></div>
+        <div class="stat-card"><div class="label">Saldo Saya</div><div class="value" style="color:var(--gold)">Rp ${user.saldo||0}</div></div>
+        <div class="stat-card"><div class="label">Peringkat Saldo</div><div class="value" style="color:var(--purple)">#${[...DB.users].filter(u=>u.role==='user').sort((a,b)=>b.saldo-a.saldo).findIndex(u=>u.id===user.id)+1}</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🔥 PREDIKSI TERBARU</div>
+        <div class="pred-grid">${recentResults.map(p => renderPredCard(p, false)).join('')}</div>
+      </div>
+    `;
+  }
+
+  if (view === 'penarikan' && isAdmin) {
+    const list = DB.withdrawals || [];
+    return `
+      <div class="panel">
+        <div class="panel-title" style="font-size: 16px;">💳 Daftar Penarikan User</div>
+        <div style="margin-top: 15px;">
+          ${list.length > 0 ? list.map((t, i) => `
+            <div class="row" style="align-items: flex-start; flex-direction: column; gap: 10px; padding: 15px;">
+              <div style="display: flex; justify-content: space-between; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                <div><div class="row-name" style="font-size: 14px; color: var(--neon);">${esc(t.userName)}</div><div class="row-sub">${new Date(t.createdAt).toLocaleString('id-ID')}</div></div>
+                <span class="badge ${t.status === 'Pending' ? 'coming-soon' : 'active'}">${t.status}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; width: 100%;">
+                <div>
+                  <div style="font-size: 12px; color: var(--muted);">Metode: <b style="color:#fff">${t.method}</b></div>
+                  <div style="font-size: 12px; color: var(--muted);">No. Rek: <b style="color:#fff">${t.accountNumber}</b></div>
+                  <div style="font-size: 12px; color: var(--muted);">A/N: <b style="color:#fff">${t.accountName}</b></div>
+                </div>
+                <div style="text-align: right;"><div style="font-size: 11px; color: var(--muted);">Nominal</div><div style="font-size: 16px; font-weight: 800; color: var(--gold);">Rp ${t.amount.toLocaleString('id-ID')}</div></div>
+              </div>
+              ${t.status === 'Pending' ? `<button onclick="suksesTarik('${t.id}')" class="btn-primary" style="margin-top: 5px; padding: 8px; font-size: 13px; background: linear-gradient(90deg, #10b981, #059669);">✅ Tandai Sudah Ditransfer</button>` : ''}
+            </div>
+          `).join('') : '<div style="text-align:center; padding: 20px; color: gray;">Belum ada permintaan penarikan.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  if (view === 'tarik') {
+    return `
+      <div class="panel" style="max-width: 500px; margin: 0 auto;">
+        <div class="panel-title" style="justify-content: center; font-size: 18px;">💸 TARIK TUNAI</div>
+        <p style="text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 20px;">Saldo Kamu: <b style="color: var(--gold); font-size: 18px;">Rp ${user.saldo || 0}</b></p>
+        <div class="form-group"><label>Jumlah Penarikan (Rp)</label><input type="number" id="tarik-jumlah" placeholder="Minimal Rp 10.000" min="10000"></div>
+        <div class="form-group">
+          <label>Metode Penarikan</label>
+          <select id="tarik-metode">
+            <option value="DANA">DANA</option><option value="OVO">OVO</option><option value="GOPAY">GOPAY</option>
+            <option value="BANK BCA">BANK BCA</option><option value="BANK BRI">BANK BRI</option><option value="BANK MANDIRI">BANK MANDIRI</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Nomor HP / Rekening</label><input type="number" id="tarik-nomor" placeholder="Contoh: 08123456789"></div>
+        <div class="form-group"><label>Nama Pemilik Rekening</label><input type="text" id="tarik-nama" placeholder="Nama sesuai rekening/e-wallet"></div>
+        <button class="btn-primary" style="margin-top: 10px;" onclick="prosesTarik()">Kirim Permintaan Tarik</button>
+      </div>
+    `;
+  }
+
+  if (view === 'profil') {
+    return `
+      <div class="panel" style="max-width: 500px; margin: 0 auto;">
+        <div class="profile-header">
+          <div class="profile-img"><img src="https://i.ibb.co.com/NnjZvt0M/logo.jpg"></div>
+          <div>
+            <div style="font-size: 20px; font-weight: 800; color: var(--neon);">${esc(user.name)}</div>
+            <div style="color: var(--muted); font-size: 13px;">@${esc(user.username)}</div>
+            <div style="margin-top: 5px; font-weight: 700; color: var(--gold);">Saldo: Rp ${user.saldo || 0}</div>
+          </div>
+        </div>
+        <div class="panel-title" style="color: var(--text);">🎁 Kode Referral Kamu</div>
+        <p style="font-size: 12px; color: var(--muted); margin-bottom: 10px;">Bagikan kode ini ke temanmu. Jika ada yang mendaftar menggunakan kodemu, kamu dapat <b>Rp 100</b>!</p>
+        <div class="ref-box">
+          <input type="text" value="${user.referralCode || '-'}" id="my-ref-code" readonly>
+          <button class="btn-primary" style="width: auto; padding: 0 20px;" onclick="copyRef()">Copy</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (view === 'saldo') {
+    const topUsers = [...DB.users].filter(u => u.role === 'user').sort((a,b) => (b.saldo||0) - (a.saldo||0)).slice(0, 20);
+    return `
+      <div class="panel" style="max-width: 600px; margin: 0 auto;">
+        <div class="panel-title" style="font-size: 16px; justify-content: center; padding-bottom: 15px; border-bottom: 1px solid var(--border);">💰 PALING BANYAK SALDO</div>
+        <div style="margin-top: 15px;">
+          ${topUsers.length > 0 ? topUsers.map((u, i) => {
+            let bgAvatar = '';
+            if(i === 0) bgAvatar = 'background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000;';
+            else if(i === 1) bgAvatar = 'background: linear-gradient(135deg, #94a3b8, #cbd5e1); color: #000;';
+            else if(i === 2) bgAvatar = 'background: linear-gradient(135deg, #d97706, #b45309); color: #fff;';
+            return `
+            <div class="row" style="${i < 3 ? 'border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);' : ''}">
+              <div style="font-weight:800; width:25px; color:${i===0?'var(--gold)':i===1?'#cbd5e1':i===2?'#f59e0b':'var(--muted)'};">#${i+1}</div>
+              <div class="avatar" style="${bgAvatar}">${u.name.charAt(0)}</div>
+              <div class="row-main"><div class="row-name">${esc(u.name)}</div></div>
+              <div style="font-weight:800;color:var(--gold);font-size:14px;">Rp ${u.saldo || 0}</div>
+            </div>
+          `}).join('') : '<div style="text-align:center; padding: 20px; color: gray;">Belum ada user yang mendaftar.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  if (view === 'preds') {
+    return `
+      ${isAdmin ? `<button class="btn-primary" style="width:auto;padding:10px 20px;margin-bottom:15px" onclick="openPredModal()">+ Tambah Prediksi</button>` : ''}
+      <div class="pred-grid">${DB.preds.map(p => renderPredCard(p, isAdmin)).join('')}</div>`;
+  }
+
+  if (view === 'users' && isAdmin) {
+    return `
+      <div class="panel">
+        ${DB.users.filter(u=>u.role==='user').map(u => `
+          <div class="row">
+            <div class="avatar">${u.name.charAt(0)}</div>
+            <div class="row-main">
+              <div class="row-name">${esc(u.name)}</div>
+              <div class="row-sub">${esc(u.username)} • Saldo: Rp ${u.saldo||0}</div>
+            </div>
+            <span class="badge ${u.status==='active'?'active':'blocked'}">${u.status}</span>
+            <button onclick="toggleBlock('${u.id}')" style="margin-left:10px;font-size:11px;padding:5px;border:1px solid #444;border-radius:5px">
+              ${u.status==='active'?'Blokir':'Aktifkan'}
+            </button>
+          </div>
+        `).join('') || '<div style="text-align:center; padding: 20px; color: gray;">Belum ada user terdaftar.</div>'}
+      </div>`;
+  }
+
+  return '';
+}
+
+/* =============================================================
+   5. FUNGSI LOGIKA PENARIKAN & CRUD
+   ============================================================= */
+function toggleMaintenance() {
+  DB.maintenance = !DB.maintenance;
+  saveDB(); render();
+  showToast(DB.maintenance ? 'Mode Maintenance: AKTIF' : 'Mode Maintenance: MATI');
+}
+
+function prosesTarik() {
+  const user = DB.users.find(u => u.id === DB.session);
+  const jumlah = parseInt($('#tarik-jumlah').value);
+  const metode = $('#tarik-metode').value;
+  const nomor = $('#tarik-nomor').value.trim();
+  const nama = $('#tarik-nama').value.trim();
+
+  if (!jumlah || jumlah < 10000) return showToast('Minimal penarikan Rp 10.000!');
+  if (jumlah > (user.saldo || 0)) return showToast('Saldo tidak cukup!');
+  if (!nomor || !nama) return showToast('Isi nomor dan nama rekening!');
+
+  user.saldo -= jumlah;
+  const trx = { id: uid(), userId: user.id, userName: user.name, amount: jumlah, method: metode, accountNumber: nomor, accountName: nama, status: 'Pending', createdAt: Date.now() };
+  DB.withdrawals.unshift(trx);
+  
+  saveDB();
+  pushNotif(user.id, '⏳ Penarikan Diproses', `Permintaan penarikan Rp ${jumlah.toLocaleString('id-ID')} sedang menunggu konfirmasi Admin.`);
+  pushNotif('admin', '🔔 Penarikan Baru!', `User ${user.name} mengajukan penarikan Rp ${jumlah.toLocaleString('id-ID')}.`);
+  showToast('Permintaan penarikan dikirim!'); nav('dashboard'); 
+}
+
+function suksesTarik(id) {
+  const trx = DB.withdrawals.find(t => t.id === id);
+  if (trx) {
+    trx.status = 'Sukses';
+    pushNotif(trx.userId, '✅ Penarikan Sukses', `Saldo Rp ${trx.amount.toLocaleString('id-ID')} telah berhasil ditransfer ke ${trx.method} (${trx.accountNumber}).`);
+    saveDB(); render(); showToast('Penarikan ditandai sukses!');
+  }
+}
+
+function openPredModal(id = null) {
+  let p = { admin: '', text: '', t1: '', t2: '', pick: 'team1', status: 'DONE', type: 'history' };
+  let isEdit = false;
+
+  if (id) {
+    const existing = DB.preds.find(x => x.id === id);
+    if (existing) { p = existing; isEdit = true; p.type = p.text ? 'history' : 'vs'; }
+  }
+
+  const html = `
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box">
+        <h3 style="margin-bottom:15px">${isEdit ? 'Edit Prediksi' : 'Tambah Prediksi'}</h3>
+        <div class="form-group"><label>Nama Admin</label><input id="m-admin" value="${esc(p.admin)}" placeholder="Contoh: ADNAN"></div>
+        <div class="form-group">
+          <label>Tipe Prediksi</label>
+          <select id="m-type" onchange="togglePredType()">
+            <option value="history" ${p.type === 'history' ? 'selected' : ''}>Teks Historis (Selesai / Done)</option>
+            <option value="vs" ${p.type === 'vs' ? 'selected' : ''}>Pertandingan VS (Belum Main)</option>
+          </select>
+        </div>
+        <div id="form-history" style="display: ${p.type === 'history' ? 'block' : 'none'}">
+          <div class="form-group"><label>Teks Prediksi / Hasil</label><input id="m-text" value="${esc(p.text)}" placeholder="Contoh: DONE LAGI MAULL☑️☑️"></div>
+        </div>
+        <div id="form-vs" style="display: ${p.type === 'vs' ? 'block' : 'none'}">
+          <div class="form-group"><label>Tim 1</label><input id="m-t1" value="${esc(p.t1)}"></div>
+          <div class="form-group"><label>Tim 2</label><input id="m-t2" value="${esc(p.t2)}"></div>
+          <div class="form-group">
+            <label>Pilihan Admin (Warna Merah)</label>
+            <select id="m-pick">
+              <option value="team1" ${p.pick === 'team1' ? 'selected' : ''}>Tim 1</option>
+              <option value="team2" ${p.pick === 'team2' ? 'selected' : ''}>Tim 2</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+          <label>Status</label>
+          <select id="m-stat">
+            <option value="DONE" ${p.status === 'DONE' ? 'selected' : ''}>DONE (Lolos)</option>
+            <option value="LOSE" ${p.status === 'LOSE' ? 'selected' : ''}>LOSE (Gagal)</option>
+            <option value="REFF ALL" ${p.status === 'REFF ALL' ? 'selected' : ''}>REFF ALL (Refund)</option>
+            <option value="LIVE" ${p.status === 'LIVE' ? 'selected' : ''}>LIVE (Berlangsung)</option>
+            <option value="COMING SOON" ${p.status === 'COMING SOON' ? 'selected' : ''}>COMING SOON</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeModal()">Batal</button>
+          <button class="btn-primary" onclick="savePred('${id || ''}')">Simpan</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function togglePredType() {
+  const type = $('#m-type').value;
+  $('#form-history').style.display = type === 'history' ? 'block' : 'none';
+  $('#form-vs').style.display = type === 'vs' ? 'block' : 'none';
+}
+
+function closeModal() { document.querySelector('.modal-bg').remove(); }
+
+async function savePred(id = '') {
+  const admin = $('#m-admin').value.trim();
+  const type = $('#m-type').value;
+  const status = $('#m-stat').value;
+
+  if(!admin) return showToast('Isi Nama Admin!');
+
+  if (type === 'history') {
+    const text = $('#m-text').value.trim();
+    if (!text) return showToast('Isi Teks Prediksi!');
+    
+    if (id) {
+      const p = DB.preds.find(x => x.id === id);
+      if (p) {
+        p.admin = admin; p.text = text; p.status = status;
+        delete p.t1; delete p.t2; delete p.pick;
+        showToast('Prediksi berhasil diupdate!');
+      }
+    } else {
+      DB.preds.unshift({ id: uid(), admin, text, status });
+      showToast('Prediksi baru ditambahkan!');
+      DB.users.filter(u => u.role === 'user').forEach(u => pushNotif(u.id, '🎯 Prediksi Baru!', `Admin ${admin}: ${text}`));
+    }
+  } else {
+    const t1 = $('#m-t1').value.trim();
+    const t2 = $('#m-t2').value.trim();
+    const pick = $('#m-pick').value;
+    if (!t1 || !t2) return showToast('Isi Tim 1 dan Tim 2!');
+
+    if (id) {
+      const p = DB.preds.find(x => x.id === id);
+      if (p) {
+        p.admin = admin; p.t1 = t1; p.t2 = t2; p.pick = pick; p.status = status;
+        delete p.text;
+        showToast('Prediksi berhasil diupdate!');
+      }
+    } else {
+      DB.preds.unshift({ id: uid(), admin, t1, t2, pick, status });
+      showToast('Prediksi baru ditambahkan!');
+      DB.users.filter(u => u.role === 'user').forEach(u => pushNotif(u.id, '🎯 Prediksi Baru!', `Admin ${admin}: ${t1} VS ${t2}`));
+    }
+  }
+  saveDB(); closeModal(); render(); 
+}
+
+function delPred(id) { 
+  if(confirm('Yakin ingin menghapus prediksi ini?')) { 
+    DB.preds = DB.preds.filter(p=>p.id!==id); 
+    saveDB(); render(); 
+  } 
+}
+
+function toggleBlock(id) { 
+  const u = DB.users.find(x=>x.id===id); 
+  u.status = u.status==='active'?'blocked':'active'; 
+  saveDB(); render(); 
+}
+
+function copyRef() {
+  const refInput = document.getElementById('my-ref-code');
+  refInput.select(); refInput.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(refInput.value);
+  showToast('Kode Referral berhasil dicopy!');
+}
+
+// Mulai Aplikasi saat halaman dimuat
+initDB();
+</script>
+</body>
+</html>
